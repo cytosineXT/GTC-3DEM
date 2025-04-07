@@ -170,7 +170,6 @@ def plotRCS2(rcs,savedir,logger):
     )
     # pio.show(fig)
     pio.write_image(fig, savedir)
-    # logger.info(f'画图用时：{time.time()-tic:.4f}s')
 
 def plot2DRCS(rcs, savedir,logger,cutmax):
     import matplotlib.pyplot as plt
@@ -186,7 +185,7 @@ def plot2DRCS(rcs, savedir,logger,cutmax):
     plt.figure()
     plt.imshow(rcs, cmap=cmap, norm=norm, origin='lower')
     plt.colorbar(label='RCS/m²')
-    if cutmax != None:# 设置图例的上下限
+    if cutmax != None:
         plt.clim(torch.min(rcs).item(), cutmax)
     plt.xlabel("Theta")
     plt.ylabel("Phi")
@@ -201,7 +200,7 @@ def plot2DRCS(rcs, savedir,logger,cutmax):
 def plotstatistic2(psnr_list, ssim_list, mse_list, statisticdir):
     # 绘制统计图
     def to_percent(y,position):
-        return str(int((100*y))) #+"%"#这里可以用round（）函数设置取几位小数
+        return str(int((100*y)))
     # binss0 = 40
     binss = 20
 
@@ -209,17 +208,9 @@ def plotstatistic2(psnr_list, ssim_list, mse_list, statisticdir):
     plt.figure(figsize=(12, 6))
 
     #-----------------------------------mse-------------------------------------------
-    mse_threshold = 0.5
-    mse_list = [m for m in mse_list if m <= mse_threshold]
     print(len(mse_list))
-    # MSE 直方图和正态分布曲线
     plt.subplot(3, 3, 1)
-    # counts, bins, patches = plt.hist(mse_list, bins=binss, edgecolor='black', density=True, stacked=True)
     counts, bins, patches = plt.hist(mse_list, bins=binss*2, edgecolor='black', range=(0,0.75), density=True)
-    # print(f'counts{counts},bins{bins},patches{patches}')
-
-    # fomatter=FuncFormatter(to_percent)#这里把刻度乘了100，为了得到百分比纵轴
-    # plt.gca().yaxis.set_major_formatter(fomatter)
 
     mu, std = norm.fit(mse_list)
     # x = np.linspace(-5, 15, 1000)
@@ -241,12 +232,9 @@ def plotstatistic2(psnr_list, ssim_list, mse_list, statisticdir):
     fomatter=FuncFormatter(to_percent)
     plt.gca().yaxis.set_major_formatter(fomatter)
     mu, std = norm.fit(psnr_list)
-    # x = np.linspace(15,45, 1000)
     x = np.linspace(min(psnr_list)-2, max(psnr_list)+2, 1000)
     plt.plot(x, norm.pdf(x, mu, std), 'r-', linewidth=2, label='Normal fit')
-    # plt.xlim(-5, 15)  # 限制横坐标范围
     plt.xlabel('PSNR')
-    # plt.ylabel('Probability of samples')
     plt.ylabel('Probability of samples (%)')
     plt.title('PSNR Histogram and Normal Fit')
     plt.legend()
@@ -254,15 +242,11 @@ def plotstatistic2(psnr_list, ssim_list, mse_list, statisticdir):
     #-----------------------------------SSIM-------------------------------------------
     # SSIM 直方图和正态分布曲线
     plt.subplot(3, 3, 3)
-    # counts, bins, patches = plt.hist(ssim_list, bins=binss, edgecolor='black', density=True, stacked=True)
     counts, bins, patches = plt.hist(ssim_list, bins=binss, edgecolor='black', density=True)
-    # fomatter=FuncFormatter(to_percent)
     # plt.gca().yaxis.set_major_formatter(fomatter)
     mu, std = norm.fit(ssim_list)
-    # x = np.linspace(0.6,1.1, 1000)
     x = np.linspace(min(ssim_list)-0.05, max(ssim_list)+0.05, 1000)
     plt.plot(x, norm.pdf(x, mu, std), 'r-', linewidth=2, label='Normal fit')
-    # plt.xlim(0.55, 1.1)  # 限制横坐标范围
     plt.xlabel('SSIM')
     # plt.ylabel('Probability of samples')
     plt.ylabel('Probability of samples (%)')
@@ -278,7 +262,6 @@ def plotstatistic2(psnr_list, ssim_list, mse_list, statisticdir):
 def valmain(draw, device, weight, rcsdir, save_dir, logger, epoch, trainval=False, draw3d=False,lgrcs=False,decoder_outdim=3,encoder_layer=6,paddingsize=18000, n=4, middim=64,attnlayer=0,valdataloader=None, batchsize=40):
     tic = time.time()
     logger.info(f'val batchsize={batchsize}')
-    # pngsavedir = os.path.join(save_dir,'0508_b827_theta90phi330freq0.9_4w_sm.png')
     freq_list = []
     mse_samples = []
     psnr_samples = []
@@ -297,15 +280,13 @@ def valmain(draw, device, weight, rcsdir, save_dir, logger, epoch, trainval=Fals
     if trainval == False:
         logger.info(f'device:{device}')
 
-    # autoencoder = MeshCodec(num_discrete_coors = 128, paddingsize = paddingsize, attn_encoder_depth=attnlayer).to(device) #这里实例化，是进去跑了init
-    autoencoder = MeshCodec( #这里实例化，是进去跑了init 草 但是这里还是用的paddingsize
+    autoencoder = MeshCodec(
     num_discrete_coors = 128,
     device= device,
     paddingsize = paddingsize,
     attn_encoder_depth = attnlayer,
                             ).to(device)
     autoencoder.load_state_dict(torch.load(weight), strict=True)
-    # autoencoder = autoencoder.to(device)
     #-------------------------------------------------------------------------------------
     with torch.no_grad():
         for in_em1,rcs1 in tqdm(dataloader,desc=f'val进度',ncols=70,postfix=f''):
@@ -314,18 +295,18 @@ def valmain(draw, device, weight, rcsdir, save_dir, logger, epoch, trainval=Fals
             planesur_faces, planesur_verts, planesur_faceedges, geoinfo = process_files(objlist, device)
 
             start_time0 = time.time()
-            loss, outrcs, psnr_mean, psnrlist, ssim_mean, ssimlist, mse, nmse, rmse, l1, percentage_error, mselist= autoencoder( #这里使用网络，是进去跑了forward
+            loss, outrcs, psnr_mean, psnrlist, ssim_mean, ssimlist, mse, nmse, rmse, l1, percentage_error, mselist= autoencoder(
                 vertices = planesur_verts,
-                faces = planesur_faces, #torch.Size([batchsize, 33564, 3])
+                faces = planesur_faces,
                 face_edges = planesur_faceedges,
-                in_em = in_em1,#.to(device)
-                GT = rcs1.to(device), #这里放真值
+                in_em = in_em1,
+                GT = rcs1.to(device),
                 logger = logger,
                 device = device,
             )
             inftime = time.time()-start_time0
             for i in range(len(psnrlist)):
-                freq = float(in_em0[3][i])  # 提取频率值
+                freq = float(in_em0[3][i]) 
                 freq_list.append(freq)
                 mse_samples.append(mselist[i].item())
                 psnr_samples.append(psnrlist[i].item())
@@ -334,10 +315,8 @@ def valmain(draw, device, weight, rcsdir, save_dir, logger, epoch, trainval=Fals
 
             if trainval == False:
                 logger.info(f'单次推理用时：{time.time()-start_time0:.4f}s，单点推理用时：{(time.time()-start_time0)/batchsize:.4f}s')
-                # logger.info(f'{plane}, em={eminfo}, loss={loss:.4f}')
-            # torch.cuda.empty_cache()
             if draw == True:
-                for i in range(outrcs.shape[0]):  # 遍历每个样本
+                for i in range(outrcs.shape[0]):
                     single_outrcs = outrcs[i].squeeze().to(device)
                     single_rcs1 = rcs1[i][:-1].squeeze().to(device)
                     single_diff = single_rcs1-single_outrcs
@@ -357,15 +336,14 @@ def valmain(draw, device, weight, rcsdir, save_dir, logger, epoch, trainval=Fals
                     out2Drcspngpath = os.path.join(save_dir2,f'epoch{epoch}_{plane}_theta{eminfo[0]}phi{eminfo[1]}freq{eminfo[2]:.3f}_psnr{psnr1:.2f}_ssim{ssim1:.4f}_mse{mse1:.4f}_2D.png')
                     out2Drcspngpath2 = os.path.join(save_dir2,f'epoch{epoch}_{plane}_theta{eminfo[0]}phi{eminfo[1]}freq{eminfo[2]:.3f}_psnr{psnr1:.2f}_ssim{ssim1:.4f}_mse{mse1:.4f}_2Dcut.png')
                     out2Drcspngpath3 = os.path.join(save_dir2,f'epoch{epoch}_{plane}_theta{eminfo[0]}phi{eminfo[1]}freq{eminfo[2]:.3f}_psnr{psnr1:.2f}_ssim{ssim1:.4f}_mse{mse1:.4f}_diff{(torch.max(torch.abs(torch.max(single_diff)),torch.abs(torch.min(single_diff)))).item():.4f}_2Ddiff.png')
-                    # logger.info(out2Drcspngpath) #查看输出的图片叫啥在哪儿
-                    plot2DRCS(rcs=single_outrcs, savedir=out2Drcspngpath, logger=logger,cutmax=None) #预测2D
-                    plot2DRCS(rcs=single_outrcs, savedir=out2Drcspngpath2, logger=logger,cutmax=torch.max(single_rcs1).item()) #预测2D但是带cut
-                    plot2DRCS(rcs=single_diff, savedir=out2Drcspngpath3, logger=logger,cutmax=torch.max(single_diff).item()) #预测2D和GT的差异
-                    plot2DRCS(rcs=single_rcs1, savedir=out2DGTpngpath, logger=logger,cutmax=None) #GT2D
+                    plot2DRCS(rcs=single_outrcs, savedir=out2Drcspngpath, logger=logger,cutmax=None) 
+                    plot2DRCS(rcs=single_outrcs, savedir=out2Drcspngpath2, logger=logger,cutmax=torch.max(single_rcs1).item()) 
+                    plot2DRCS(rcs=single_diff, savedir=out2Drcspngpath3, logger=logger,cutmax=torch.max(single_diff).item()) 
+                    plot2DRCS(rcs=single_rcs1, savedir=out2DGTpngpath, logger=logger,cutmax=None)
 
                     if draw3d == True:
-                        plotRCS2(rcs=single_rcs1, savedir=outGTpngpath, logger=logger) #GT 3D
-                        plotRCS2(rcs=single_outrcs, savedir=outrcspngpath, logger=logger) #预测 3D
+                        plotRCS2(rcs=single_rcs1, savedir=outGTpngpath, logger=logger)
+                        plotRCS2(rcs=single_outrcs, savedir=outrcspngpath, logger=logger)
             
             torch.cuda.empty_cache()
             losses.append(loss)
@@ -402,36 +380,29 @@ def valmain(draw, device, weight, rcsdir, save_dir, logger, epoch, trainval=Fals
 
 if __name__ == '__main__':
     starttime = time.time()
-    # 初始化参数
     trainval = False
     cuda = 'cuda:1'
-    # cuda = 'cpu'
     draw = True
     draw = False
     draw3d = False
     lgrcs = False
     device = torch.device(cuda if torch.cuda.is_available() else "cpu")
-    # valbatch = 20
     valbatch = 20
     epoch = -1
-    # attnlayer = 0
     attnlayer = 1
     val_mse_per_plane = {}
     val_psnr_per_plane = {}
     val_ssim_per_plane = {}
     from datetime import datetime
     date = datetime.today().strftime("%m%d")
-    # save_dir = str(increment_path(Path(ROOT / "outputGNN" / "inference" / f'{date}_testlegend'), exist_ok=False))
-    # save_dir = str(increment_path(Path(ROOT / "outputGNN" / "inference" / f'{date}_fold2train10valall'), exist_ok=False))
-    save_dir = str(increment_path(Path(ROOT / "outputGNN" / "inference" / (f'{date}_b943fine50last'+'_valall_perfreq')), exist_ok=False))
+    save_dir = str(increment_path(Path(ROOT / "outputGNN" / "inference" / (f'{date}_valall_perfreq')), exist_ok=False))
     logdir = os.path.join(save_dir, 'alog.txt')
     logger = get_logger(logdir)
     valmsesavedir = os.path.join(save_dir, 'valmsecolume.png')
     valpsnrsavedir = os.path.join(save_dir, 'valpsnrcolume.png')
     valssimsavedir = os.path.join(save_dir, 'valssimcolume.png')
 
-    datafolder = r'/mnt/truenas_jiangxiaotian/allplanes/mie' #liang
-    # datafolder = '/mnt/SrvDataDisk/Datasets_3DEM/allplanes/mie'
+    datafolder = r'/mnt/truenas_jiangxiaotian/allplanes/mie'
 
     Fold1 = ['b871','bb7d','b827','b905','bbc6']
     Fold2 = ['b80b','ba0f','b7c1','b9e6','bb7c']
@@ -440,27 +411,16 @@ if __name__ == '__main__':
     planes = ['b871', 'bb7d', 'b827', 'b905', 'bbc6', 'b80b', 'ba0f', 'b7c1', 'b9e6', 'bb7c', 'b943', 'b97b', 'b812', 'bc2c', 'b974', 'bb26', 'b7fd', 'baa9', 'b979', 'b8ed']
     # planes = ['b943','b7fd']
 
-    # 根据指定的 trainplanes 和 valplanes 来进行划分
     trainplanes = ['b943']
-    # trainplanes = None
     valplanes = None
-    # valplanes = ['b7fd']
 
-    # 检查并分配飞机
     if valplanes is None:
-        valplanes = list(set(planes) - set(trainplanes))  # 剩余飞机分配给valplanes
+        valplanes = list(set(planes) - set(trainplanes)) 
     if trainplanes is None:
-        trainplanes = list(set(planes) - set(valplanes))  # 剩余飞机分配给trainplanes
+        trainplanes = list(set(planes) - set(valplanes))  
     
-    weight = r'/home/jiangxiaotian/workspace/3DEM/outputGNN/train0220/0222_sd7_50fineL1_Noneb943_GNNTr_e200Tr1_cuda:1_m0006/last.pt'
-    # weight = r'/home/jiangxiaotian/workspace/3DEM/outputGNN/b7fd_50fine_m0090.pt'
-    # weight = r'/home/jiangxiaotian/workspace/3DEM/outputGNN/fold2val_10train_50e_fantastic.pt'
-    # weight = r'/home/jiangxiaotian/workspace/3DEM/outputGNN/train0220/0222_sd7_50fineL1_Noneb943_GNNTr_e200Tr1_cuda:1_/last.pt'
-    # weight = r'/home/jiangxiaotian/workspace/3DEM/outputGNN/fold4_10train_last_m1169_fantastic.pt'
-    # weight = r'/home/jiangxiaotian/workspace/3DEM/outputGNN/fold2_10train_128e_m0840_fantastic.pt'
+    weight = r'last.pt'
 
-    # 训练集和验证集数据加载
-    # train_files = [plane + '_mie_val' for plane in trainplanes]
     val_files = [plane + '_mie_val' for plane in planes]
 
     val_dataloaders = {}
@@ -470,7 +430,6 @@ if __name__ == '__main__':
         plane1 = valfile1[:4]
         val_dataloaders[plane1] = DataLoader.DataLoader(valdataset, batch_size=valbatch, shuffle=False, num_workers=16, pin_memory=True)
 
-    # 进行验证推理
     for plane, valdataloader in val_dataloaders.items():
         logger.info(f"开始对飞机{plane}进行验证")
         valplanedir = os.path.join(save_dir, plane)
@@ -482,7 +441,6 @@ if __name__ == '__main__':
         val_psnr_per_plane[plane] = valpsnr.item()
         val_ssim_per_plane[plane] = valssim.item()
 
-    # 计算训练集和验证集的平均值
     train_mse_values = [val_mse_per_plane[plane] for plane in trainplanes]
     val_mse_values = [val_mse_per_plane[plane] for plane in valplanes]
     train_psnr_values = [val_psnr_per_plane[plane] for plane in trainplanes]
@@ -497,9 +455,8 @@ if __name__ == '__main__':
     allavessim_train = np.mean(train_ssim_values)
     allavessim_val = np.mean(val_ssim_values)
 
-    # 绘制 MSE 的柱状图
     plt.clf()
-    sorted_mse = sorted(val_mse_per_plane.items(), key=lambda x: x[1])  # 从小到大排序
+    sorted_mse = sorted(val_mse_per_plane.items(), key=lambda x: x[1]) 
     planes_mse, mse_values = zip(*sorted_mse)
 
     bars = plt.bar(planes_mse, mse_values, label='MSE per Plane')
@@ -513,37 +470,35 @@ if __name__ == '__main__':
     legend_elements = [
         Line2D([0], [0], color='darkseagreen', lw=2, linestyle='--', label=f'Ave Held-Out Val MSE ({allavemse_train:.4f})'),
         Line2D([0], [0], color='lightskyblue', lw=2, linestyle='--', label=f'Ave OOD Val MSE ({allavemse_val:.4f})'),
-        Rectangle((0, 0), 0.9, 0.5, color='darkseagreen', label='Train Plane'),  # 长方形表示训练集，宽1，高0.5
-        Rectangle((0, 0), 0.9, 0.5, color='lightskyblue', label='Val Plane')  # 长方形表示验证集，宽1，高0.5
+        Rectangle((0, 0), 0.9, 0.5, color='darkseagreen', label='Train Plane'), 
+        Rectangle((0, 0), 0.9, 0.5, color='lightskyblue', label='Val Plane') 
     ]
     plt.legend(handles=legend_elements, loc='best')
     # plt.legend()
     plt.xticks(rotation=80)
 
-    # 为训练集和验证集的柱子分别着色
     planes_msedata = []
     for i, bar in enumerate(bars):
         if planes_mse[i] in trainplanes:
-            bar.set_color('darkseagreen')  # 训练集柱子为绿色
-            planes_msedata.append(('Train', planes_mse[i], mse_values[i]))  # 保存训练集数据
+            bar.set_color('darkseagreen')  
+            planes_msedata.append(('Train', planes_mse[i], mse_values[i])) 
         else:
-            bar.set_color('lightskyblue')  # 验证集柱子为蓝色
-            planes_msedata.append(('Val', planes_mse[i], mse_values[i]))  # 保存验证集数据
+            bar.set_color('lightskyblue') 
+            planes_msedata.append(('Val', planes_mse[i], mse_values[i]))  
 
         height = bar.get_height()
         plt.text(bar.get_x() + bar.get_width() / 2, height, f'{height:.4f}', ha='center', va='bottom', rotation=80)
 
-    plt.ylim(0, max(mse_values) * 1.2)  # 增加 y 轴的上限，使文本有足够空间
+    plt.ylim(0, max(mse_values) * 1.2)  
     plt.tight_layout()
     plt.subplots_adjust(top=0.9)
     plt.savefig(valmsesavedir)
-    savefigdata(planes_msedata, img_path=valmsesavedir)#('Train/Val', 'Plane name', MSE value)
+    savefigdata(planes_msedata, img_path=valmsesavedir)
     plt.close()
 
 
-    # 绘制 PSNR 的柱状图
     plt.clf()
-    sorted_psnr = sorted(val_psnr_per_plane.items(), key=lambda x: x[1], reverse=True)  # 从大到小排序
+    sorted_psnr = sorted(val_psnr_per_plane.items(), key=lambda x: x[1], reverse=True)  
     planes_psnr, psnr_values = zip(*sorted_psnr)
 
     bars = plt.bar(planes_psnr, psnr_values, label='PSNR per Plane')
@@ -558,21 +513,20 @@ if __name__ == '__main__':
     legend_elements = [
         Line2D([0], [0], color='darkseagreen', lw=2, linestyle='--',label=f'Ave Held-Out Val PSNR ({allavepsnr_train:.2f})'),
         Line2D([0], [0], color='lightskyblue', lw=2, linestyle='--',label=f'Ave OOD Val PSNR ({allavepsnr_val:.2f})'),
-        Rectangle((0, 0), 0.9, 0.5, color='darkseagreen', label='Train Plane'),  # 长方形表示训练集，宽1，高0.5
-        Rectangle((0, 0), 0.9, 0.5, color='lightskyblue', label='Val Plane')  # 长方形表示验证集，宽1，高0.5
+        Rectangle((0, 0), 0.9, 0.5, color='darkseagreen', label='Train Plane'), 
+        Rectangle((0, 0), 0.9, 0.5, color='lightskyblue', label='Val Plane') 
     ]
     plt.legend(handles=legend_elements, loc='best')
     plt.xticks(rotation=80)
 
-    # 为训练集和验证集的柱子分别着色
     planes_psnrdata = []
     for i, bar in enumerate(bars):
         if planes_psnr[i] in trainplanes:
-            bar.set_color('darkseagreen')  # 训练集柱子为绿色
-            planes_psnrdata.append(('Train', planes_psnr[i], psnr_values[i]))  # 保存训练集数据
+            bar.set_color('darkseagreen') 
+            planes_psnrdata.append(('Train', planes_psnr[i], psnr_values[i])) 
         else:
-            bar.set_color('lightskyblue')  # 验证集柱子为蓝色
-            planes_psnrdata.append(('Val', planes_psnr[i], psnr_values[i]))  # 保存验证集数据
+            bar.set_color('lightskyblue')  
+            planes_psnrdata.append(('Val', planes_psnr[i], psnr_values[i])) 
 
         height = bar.get_height()
         plt.text(bar.get_x() + bar.get_width() / 2, height, f'{height:.2f}', ha='center', va='bottom', rotation=80)
@@ -585,9 +539,9 @@ if __name__ == '__main__':
     plt.close()
 
 
-    # 绘制 SSIM 的柱状图
+
     plt.clf()
-    sorted_ssim = sorted(val_ssim_per_plane.items(), key=lambda x: x[1], reverse=True)  # 从大到小排序
+    sorted_ssim = sorted(val_ssim_per_plane.items(), key=lambda x: x[1], reverse=True)
     planes_ssim, ssim_values = zip(*sorted_ssim)
 
     bars = plt.bar(planes_ssim, ssim_values, label='SSIM per Plane')
@@ -602,21 +556,20 @@ if __name__ == '__main__':
     legend_elements = [
         Line2D([0], [0], color='darkseagreen', lw=2, linestyle='--',label=f'Ave Held-Out Val SSIM ({allavessim_train:.4f})'),
         Line2D([0], [0], color='lightskyblue', lw=2, linestyle='--',label=f'Ave OOD Val SSIM ({allavessim_val:.4f})'),
-        Rectangle((0, 0), 0.9, 0.5, color='darkseagreen', label='Train Plane'),  # 长方形表示训练集，宽1，高0.5
-        Rectangle((0, 0), 0.9, 0.5, color='lightskyblue', label='Val Plane')  # 长方形表示验证集，宽1，高0.5
+        Rectangle((0, 0), 0.9, 0.5, color='darkseagreen', label='Train Plane'),
+        Rectangle((0, 0), 0.9, 0.5, color='lightskyblue', label='Val Plane') 
     ]
     plt.legend(handles=legend_elements, loc='best')
     plt.xticks(rotation=80)
 
-    # 为训练集和验证集的柱子分别着色
     planes_ssimdata = []
     for i, bar in enumerate(bars):
         if planes_ssim[i] in trainplanes:
-            bar.set_color('darkseagreen')  # 训练集柱子为绿色
-            planes_ssimdata.append(('Train', planes_ssim[i], ssim_values[i]))  # 保存训练集数据
+            bar.set_color('darkseagreen')  
+            planes_ssimdata.append(('Train', planes_ssim[i], ssim_values[i])) 
         else:
-            bar.set_color('lightskyblue')  # 验证集柱子为蓝色
-            planes_ssimdata.append(('Val', planes_ssim[i], ssim_values[i]))  # 保存验证集数据
+            bar.set_color('lightskyblue') 
+            planes_ssimdata.append(('Val', planes_ssim[i], ssim_values[i])) 
 
         height = bar.get_height()
         plt.text(bar.get_x() + bar.get_width() / 2, height, f'{height:.4f}', ha='center', va='bottom', rotation=80)
@@ -625,7 +578,7 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.subplots_adjust(top=0.9)
     plt.savefig(valssimsavedir)
-    savefigdata(planes_ssimdata, img_path=valssimsavedir)#('Train/Val', 'Plane name', MSE value)
+    savefigdata(planes_ssimdata, img_path=valssimsavedir)
 
     plt.close()
 

@@ -1,8 +1,5 @@
-# $ pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu121 #直接一行搞定
-
-# $ pip uninstall torch torchvision torchaudio -y
+# $ pip uninstall torch torchvision -y
 # $ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121 #弥补用的
-
 accelerate>=0.25.0
 beartype
 classifier-free-guidance-pytorch>=0.5.1
@@ -15,7 +12,6 @@ numpy
 pytorch-custom-utils>=0.0.9
 taylor-series-linear-attention>=0.1.6
 torch>=2.1
-# pytorch-cuda==11.8
 torch_geometric
 torchtyping
 tqdm
@@ -30,13 +26,15 @@ kaleido
 pytorch-msssim
 thop
 pytictoc
-#"/home/jiangxiaotian/anaconda3/envs/jxtnet2/lib/python3.9/site-packages/torch/_tensor.py", line 1087
+scipy
+#"/home/***/anaconda3/envs/***/lib/python3.9/site-packages/torch/_tensor.py", line 1087
 
         # if dtype is None:
         #     return self.numpy()
         # else:
         #     return self.numpy().astype(dtype, copy=False)
-# 改成
+
+# modify to
 
         # if dtype is None:
         #     return self.cpu().detach().numpy()

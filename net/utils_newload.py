@@ -231,7 +231,7 @@ def get_model_memory(model,logger):
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())
     params = sum([np.prod(p.size()) for p in model_parameters])
     memory = params * 4 / (1024**3)
-    logger.info(f'模型占用{memory:.4f}GB')  # 以GB为单位
+    logger.info(f'model memory{memory:.4f}GB')  # 以GB为单位
     # print(f'模型占用{memory:.4f}GB')  # 以GB为单位
     return memory
 
@@ -304,7 +304,7 @@ class EMRCSDataset(Dataset.Dataset):
         phi = int(phi)
         freq = float(freq)
         in_em = [plane,theta,phi,freq]
-        rcs = torch.load(os.path.join(self.rcsdir,file))
+        rcs = torch.load(os.path.join(self.rcsdir,file), weights_only=False)
         return in_em, rcs
 
 class MultiEMRCSDataset(Dataset.Dataset):
@@ -331,7 +331,7 @@ class MultiEMRCSDataset(Dataset.Dataset):
         phi = int(phi)
         freq = float(freq)
         in_em = [plane, theta, phi, freq]
-        rcs = torch.load(full_path)
+        rcs = torch.load(full_path, weights_only=False)
         return in_em, rcs
     
 def find_matching_files(prefixlist, directory):
