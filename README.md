@@ -11,7 +11,7 @@ pip install -r requirements.txt
 
 # train
 ```bash
-python NNtrainGNN_arg4fold.py --cuda 'cpu' --attn 0
+python NNtrainGNN_arg4fold.py --cuda 'cpu'
 ```
 
 when counter error about "RuntimeError: Can't call numpy() on Tensor that requires grad. Use tensor.detach().numpy() instead.":
@@ -33,6 +33,6 @@ modify to
 
 # inference
 ```bash
-python NNval_GNN4foldbatch.py --pretrainweight 'output/testtrain/your_train_fold/your_trained_weight.pt' --attn 0
+python NNval_GNN4foldbatch.py --pretrainweight 'output/testtrain/your_train_fold/your_trained_weight.pt'
 
 ```
