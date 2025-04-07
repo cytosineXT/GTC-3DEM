@@ -1,5 +1,5 @@
 # $ pip uninstall torch torchvision -y
-# $ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121 #弥补用的
+# $ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121 #install cuda version torch
 accelerate>=0.25.0
 beartype
 classifier-free-guidance-pytorch>=0.5.1
