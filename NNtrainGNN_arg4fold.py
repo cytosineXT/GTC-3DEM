@@ -32,7 +32,7 @@ def setup_seed(seed):
 def parse_args():
     parser = argparse.ArgumentParser(description="Script with customizable parameters using argparse.")
     parser.add_argument('--epoch', type=int, default=200, help='Number of training epochs')
-    parser.add_argument('--batch', type=int, default=10, help='batchsize')
+    parser.add_argument('--batch', type=int, default=4, help='batchsize')
     parser.add_argument('--valbatch', type=int, default=40, help='valbatchsize')
     parser.add_argument('--use_preweight', type=bool, default=False, help='Whether to use pretrained weights')
     parser.add_argument('--smooth', type=bool, default=False, help='Whether to use pretrained weights')
@@ -51,7 +51,7 @@ def parse_args():
     parser.add_argument('--gama', type=float, default=0.001, help='control max loss, i love 0.001')
     parser.add_argument('--beta', type=float, default=0., help='seems to be control contrastive loss, i forgot, useless, 0')
     parser.add_argument('--lr', type=float, default=0.001, help='Loss threshold or gamma parameter')
-    parser.add_argument('--cuda', type=str, default='cpu', help='CUDA device to use(cpu cuda:0 cuda:1...)')
+    parser.add_argument('--cuda', type=str, default='cuda:0', help='CUDA device to use(cpu cuda:0 cuda:1...)')
     parser.add_argument('--fold', type=str, default=None, help='Fold to use for validation (None fold1 fold2 fold3 fold4)')
     return parser.parse_args()
 

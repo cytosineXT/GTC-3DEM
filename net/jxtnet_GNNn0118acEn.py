@@ -14,15 +14,10 @@ from beartype.typing import  Tuple, Optional
 from einops import rearrange, reduce, pack
 from einops.layers.torch import Rearrange
 
-from x_transformers.x_transformers import RMSNorm, FeedForward
-
-from local_attention import LocalMHA
-from net.utils_newload import transform_to_log_coordinates, psnr, batch_mse
+from net.utils_newload import transform_to_log_coordinates, psnr, batch_mse, derive_face_edges_from_faces
 from net.utils_newload import ssim as myssim
 from pytorch_msssim import ms_ssim, ssim
 
-from net.data import derive_face_edges_from_faces
-from taylor_series_linear_attention import TaylorSeriesLinearAttn
 from torch_geometric.nn.conv import SAGEConv
 import numpy as np
 
